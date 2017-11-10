@@ -1,6 +1,6 @@
 from math import log
 import operator
-import matplotlib as plt
+import matplotlib.pyplot as plt
 
 
 class DecisionTree:
@@ -82,6 +82,8 @@ class DecisionTree:
             if info_gain > best_info_gain:
                 best_feature = i
                 best_info_gain = info_gain
+        if feat_list == -1:
+            print("--------------wrong----------------")
         return best_feature
 
     '''
@@ -115,8 +117,10 @@ class DecisionTree:
             return DecisionTree.__majority_cnt(class_list)
         best_feat = DecisionTree.__choose_best_feature_to_split(dataset)        # 获取最优属性索引
         best_feat_label = labels[best_feat]
+        if best_feat_label == '触感':
+            print("wrrrr")
         mytree = {best_feat_label: {}}
-        sub_label = labels                                      # 删除label最优属性列表
+        sub_label = labels[:]                                      # 删除label最优属性列表
         del(sub_label[best_feat])
         feat_value = [example[best_feat] for example in dataset]    # 获取a_*中的每一项a_*^v
         unique_value = set(feat_value)
@@ -124,6 +128,9 @@ class DecisionTree:
             sub_dataset = DecisionTree.__get_split_dataset(dataset, best_feat, value)
             mytree[best_feat_label][value] = DecisionTree.__create_tree(sub_dataset, sub_label)
         return mytree
+
+    def plot_tree(self):
+        create_plot(self.__tree)
 
 
 decision_node = dict(boxstyle="sawtooth", fc="0.8")
@@ -135,11 +142,10 @@ arrow_args = dict(arrowstyle="<-")
 功能：获取嵌套dict叶子节点的数目
 输入：mytree（嵌套dict）
 '''
-
-
 def get_num_leafs(mytree):
     num_leafs = 0
-    first_str = mytree.keys()[0]
+    first_side = list(mytree.keys())
+    first_str = first_side[0]
     second_dict = mytree[first_str]
     for key in second_dict:
         if type(second_dict[key]).__name__ == 'dict':
@@ -154,10 +160,11 @@ def get_num_leafs(mytree):
 '''
 def get_tree_depth(mytree):
     maxdepth = 0
-    first_str = mytree.keys()[0]
+    first_str = list(mytree.keys())[0]
     second_dict = mytree[first_str]
     for key in second_dict:
-        if type(second_dict[key]).__name__ == 'dict':
+        a = type(second_dict[key]).__name__
+        if type(second_dict[key]).__name__ == 'dict':  # 如果还有子节点
             thisdepth = 1 + get_tree_depth(second_dict)
         else:
             thisdepth = 1
@@ -167,7 +174,8 @@ def get_tree_depth(mytree):
 
 
 '''
-d
+功能：绘制从parentpt指向centerpt的箭头
+输入：nodetxt（centerpt处需要的文字） centerpt（目标坐标） parentpt（起点坐标） nodetype（箭头形式）
 '''
 def plot_node(nodetxt, centerpt, parentpt, nodetype):
     create_plot.axl.annotate(nodetxt, xy=parentpt, xycoords='axes fraction',
@@ -187,9 +195,9 @@ def plot_mid_tex(cntrpt, parentpt, txtstring):
 def plot_tree(mytree, parentpt, nodetxt):
     num_leafs = get_num_leafs(mytree)
     depth = get_tree_depth(mytree)
-    first_str = mytree.keys()[0]
+    first_str = list(mytree.keys())[0]
     cntrpt = (plot_tree.xoff + (1.0 + float(num_leafs))/2.0/plot_tree.totalW,
-              plot_tree.xoff)
+              plot_tree.yoff)
     plot_mid_tex(cntrpt, parentpt, nodetxt)
     plot_node(first_str, cntrpt, parentpt, decision_node)
     second_dict = mytree[first_str]
