@@ -28,16 +28,12 @@ def create_dataset():
     return date_set, labels
 
 
+
 if __name__ == '__main__':
-    date_set = [[1, 1, 'yes'],
-                [1, 1, 'yes'],
-                [1, 0, 'no'],
-                [0, 1, 'no'],
-                [0, 1, 'no']]
-    b = date_set
-    del(date_set[2])
+
     dt = DT.DecisionTree()
     dt.load_dataset('test.csv')
     dt.create_tree()
     dt.plot_tree()
+
 

@@ -1,6 +1,8 @@
 from math import log
 import operator
 import matplotlib.pyplot as plt
+from pylab import mpl
+mpl.rcParams['font.sans-serif'] = ['SimHei']
 
 
 class DecisionTree:
@@ -117,8 +119,6 @@ class DecisionTree:
             return DecisionTree.__majority_cnt(class_list)
         best_feat = DecisionTree.__choose_best_feature_to_split(dataset)        # 获取最优属性索引
         best_feat_label = labels[best_feat]
-        if best_feat_label == '触感':
-            print("wrrrr")
         mytree = {best_feat_label: {}}
         sub_label = labels[:]                                      # 删除label最优属性列表
         del(sub_label[best_feat])
@@ -165,7 +165,7 @@ def get_tree_depth(mytree):
     for key in second_dict:
         a = type(second_dict[key]).__name__
         if type(second_dict[key]).__name__ == 'dict':  # 如果还有子节点
-            thisdepth = 1 + get_tree_depth(second_dict)
+            thisdepth = 1 + get_tree_depth(second_dict[key])
         else:
             thisdepth = 1
         if thisdepth > maxdepth:
@@ -203,8 +203,9 @@ def plot_tree(mytree, parentpt, nodetxt):
     second_dict = mytree[first_str]
     plot_tree.yoff = plot_tree.yoff -1.0/plot_tree.totalD
     for key in second_dict.keys():
+        a = second_dict[key]
         if type(second_dict[key]).__name__ == 'dict':
-            plot_tree(second_dict[key], cntrpt, str[key])
+             plot_tree(second_dict[key], cntrpt, str(key))
         else:
             plot_tree.xoff = plot_tree.xoff + 1.0/plot_tree.totalW
             plot_node(second_dict[key], (plot_tree.xoff, plot_tree.yoff), cntrpt, leaf_node)
