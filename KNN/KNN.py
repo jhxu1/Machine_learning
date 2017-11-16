@@ -2,6 +2,7 @@ from numpy import *
 import operator
 import matplotlib
 import matplotlib.pyplot as plt
+from os import listdir
 
 def createDateSet():
     group = array([[1.0, 1.1], [1.0, 1.0], [0, 0], [0, 0.1]])
@@ -87,6 +88,10 @@ def datingClassTest():
     return errorRate
 
 
+'''
+功能：约会数据集的KNN分类器
+输出：根据输入的属性输出所属类别
+'''
 def classifyPerson():
     resultList = ['不喜欢的人', '魅力一般的人', '极具魅力的人']
     ffMiles = float(input("你每年的飞行里程数\n"))
@@ -99,12 +104,56 @@ def classifyPerson():
     print("You will probably like this person:", resultList[classifierResult])
 
 
+'''
+功能：将图片数据转成向量
+输入：filename（图片文件名）
+输出：图形向量
+'''
+def image2vector(filename):
+    returnVect = zeros((1, 1024))
+    fr = open(filename)
+    for i in range(32):
+        lineStr = fr.readline()
+        for j in range(32):
+            returnVect[0, 32*i+j] = int(lineStr[j])
+    return returnVect
+
+
+
+def handwritingClassTest():
+    hwLabels = []
+    trainingFileList = listdir('trainingDigits')
+    m = len(trainingFileList)
+    trainingMat = zeros((m, 1024))
+    for i in range(m):
+        fileNameStr = trainingFileList[i]
+        fileStr = fileNameStr.split('.')[0]     # 去后缀
+        classNumStr = int(fileStr.split('_')[0])    # 获取类别
+        hwLabels.append(classNumStr)
+        trainingMat[i, :] = image2vector('trainingDigits/%s' % fileNameStr)
+    testFileList = listdir('testDigits')
+    errorCount = 0.0
+    mTest = len(testFileList)
+    for i in range(mTest):
+        fileNameStr = testFileList[i]
+        fileStr = fileNameStr.split('.')[0]
+        classNumStr = int(fileStr.split('_')[0])
+        vectorUnderTest = image2vector('testDigits/%s' % fileNameStr)
+        classifyResult = classify0(vectorUnderTest, trainingMat, hwLabels, 3)
+        print('the classifier came back with: %d, the real answer is: %d' % (classifyResult, classNumStr))
+        if(classifyResult != classNumStr):
+            errorCount += 1.0
+    print("\nthe total error rate is: %f" % (errorCount/float(mTest)))
+
 
 if __name__ == '__main__':
-    datingClassTest()
-    classifyPerson()
+    # datingClassTest()       # 输出分类器的误判率
+    # classifyPerson()        # 使用约会数据集的分类器进行分类
+
+    # 观测属性分布
     # datingDataMat, datingLabels = file2matrix('datingTestSet2.txt')
     # fig = plt.figure()
     # ax = fig.add_subplot(111)
     # ax.scatter(datingDataMat[:, 0], datingDataMat[:, 1], 15.0*array(datingLabels), 15.0*array(datingLabels))
     # plt.show()
+    handwritingClassTest()  # 手写数字分类
