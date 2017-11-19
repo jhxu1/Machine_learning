@@ -119,7 +119,9 @@ def image2vector(filename):
     return returnVect
 
 
-
+'''
+测试手写数字
+'''
 def handwritingClassTest():
     hwLabels = []
     trainingFileList = listdir('trainingDigits')
