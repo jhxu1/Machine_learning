@@ -11,3 +11,4 @@ Some practice about machine learning writed in python.
 - [Bayes classifier](bayes)
 - [Logistic regression](logistic)
 - [SVM](SVM)
+- [AdaBoost](AdaBoost)
