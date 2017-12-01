@@ -60,7 +60,7 @@ def buildStump(dataArr, classLabels, D):
 '''
 功能：基于单层决策树的AdaBoost训练过程
 输入：dataArr（属性矩阵）classLabels（类别向量）numIt（最大迭代次数）
-输出：字典（每次迭代的信息）
+输出：AdaBoost分类器（每次迭代的信息）
 '''
 def adaBoostTrainDS(dataArr, classLabels, numIt=40):
     weakClassArr = []
@@ -75,21 +75,25 @@ def adaBoostTrainDS(dataArr, classLabels, numIt=40):
         bestStump['alpha'] = alpha
         weakClassArr.append(bestStump)
         print("classEst:  ", classEst.T)
-        expon = multiply(-1 * alpha * mat(classLabels).T, classEst)         # 更改每个样本的权重
+        expon = multiply(-1 * alpha * mat(classLabels).T, classEst)         # 计算e^-alpha
         for i in range(m):
-            D[i] = multiply(D[i], exp(expon[i]))
+            D[i] = multiply(D[i], exp(expon[i]))                            # 更改每个样本的权重
         D = D/sum(D)
         aggClassEst += alpha * classEst                                     # 通过aggClassEst了解总的分类
         print("aggClassEst: ", aggClassEst.T)
         aggErrors = multiply(sign(aggClassEst) != mat(classLabels).T, ones((m, 1)))
-        errorRate = aggErrors.sum() / m
+        errorRate = float(aggErrors.sum()) / m
         print("total error: ", errorRate, "\n")
         if errorRate == 0.0:
             break
     print('---------------------------训练AdaBoost分类器完成----------------------------')
     return weakClassArr
 
-
+'''
+功能：AdaBoost预测
+输入：datToClass（属性）classifierArr（AdaBoost分类器）
+输出：预测类别
+'''
 def adaClassify(datToClass, classifierArr):
     print('---------------------------开始预测数据',datToClass,'----------------------------')
     dataMatrix = mat(datToClass)
@@ -99,8 +103,30 @@ def adaClassify(datToClass, classifierArr):
         classEst = stumpClassify(dataMatrix, classifierArr[i]['dim'], classifierArr[i]['thresh'], classifierArr[i]['ineq'])
         aggClassEst += classifierArr[i]['alpha']*classEst
         print(aggClassEst)
-    print('---------------------------预测结果为', int(sign(aggClassEst)), '----------------------------')
-    return sign(aggClassEst)
+    for i in range(len(aggClassEst)):
+        aggClassEst[i] = sign(aggClassEst[i])
+    print('---------------------------预测结果为\n', aggClassEst, '\n----------------------------')
+    return aggClassEst
+
+
+'''
+功能：读取文件数据
+输入：fileName（文件名）
+输出：属性矩阵 类别向量
+'''
+def loadDataSet(fileName):
+    numFeat = len(open(fileName).readline().split('\t'))           # 获取特征数量(numFeat-1)
+    dataMat = []; labelMat = []
+    fr = open(fileName)
+    for line in fr.readlines():
+        lineArr = []
+        curLine = line.strip().split('\t')
+        for i in range(numFeat-1):
+            lineArr.append(float(curLine[-1]))
+        dataMat.append(lineArr)
+        labelMat.append(float(curLine[-1]))
+    return dataMat,labelMat
+
 
 
 
@@ -120,6 +146,15 @@ if __name__ == '__main__':
     # print("最优单层决策树:\n", bestStump, "\n最小权重误差:\n", minError, "\n最优样本预测类别:\n", array(bestClassEst))
 
     # 构造AdaBoost分类器及测试
-    # dataMat, classLabels = loadSimpData()
-    # weakClassArr = adaBoostTrainDS(dataMat, classLabels)
-    # adaClassify([0,0], weakClassArr)
+    dataMat, classLabels = loadSimpData()
+    weakClassArr = adaBoostTrainDS(dataMat, classLabels)
+    adaClassify([0,0], weakClassArr)
+
+    # 使用AdaBoost预测马的疝气病
+    # dataArr, labelArr = loadDataSet('horseColicTraining2.txt')
+    # classifierArray = adaBoostTrainDS(dataArr, labelArr, 10)
+    # testArr, testLabelArr = loadDataSet('horseColicTest2.txt')
+    # prediction10 = adaClassify(testArr, classifierArray)
+    # errArr = mat(ones((67, 1)))
+    # err = errArr[prediction10 != mat(testLabelArr).T].sum()
+    # print(err)
