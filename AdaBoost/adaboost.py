@@ -87,7 +87,7 @@ def adaBoostTrainDS(dataArr, classLabels, numIt=40):
         if errorRate == 0.0:
             break
     print('---------------------------训练AdaBoost分类器完成----------------------------')
-    return weakClassArr
+    return weakClassArr,aggClassEst
 
 '''
 功能：AdaBoost预测
@@ -122,11 +122,41 @@ def loadDataSet(fileName):
         lineArr = []
         curLine = line.strip().split('\t')
         for i in range(numFeat-1):
-            lineArr.append(float(curLine[-1]))
+            lineArr.append(float(curLine[i]))
         dataMat.append(lineArr)
         labelMat.append(float(curLine[-1]))
     return dataMat,labelMat
 
+'''
+功能：ROC曲线的绘制及AUC计算函数
+输入：predStrengths（行向量，表示分类器的预测强度）classLabels（类别向量）
+'''
+def plotROC(predStrengths, classLabels):
+    import matplotlib.pyplot as plt
+    cur = (1.0, 1.0)
+    ySum = 0.0
+    numPosClas = sum(array(classLabels) == 1.0)
+    yStep = 1/float(numPosClas)                                     # 获取步长
+    xStep = 1/float(len(classLabels)-numPosClas)
+    sortedIndicies = predStrengths.argsort()                        # 获取从小到大排序的索引
+    fig = plt.figure()
+    fig.clf()
+    ax = plt.subplot(111)
+    for index in sortedIndicies.tolist()[0]:
+        if classLabels[index] == 1.0:
+            delX = 0; delY = yStep
+        else:
+            delX = xStep; delY = 0
+            ySum += cur[1]
+        ax.plot([cur[0], cur[0]-delX], [cur[1], cur[1]-delY], c='b')
+        cur = (cur[0] - delX, cur[1] - delY)
+    ax.plot([0, 1], [0, 1], 'b--')
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('ROC curve for AdaBoost Horse Colic Detection System')
+    ax.axis([0, 1, 0, 1])
+    plt.show()
+    print('the Area Under the Curve is:  ', ySum * xStep)
 
 
 
@@ -146,9 +176,9 @@ if __name__ == '__main__':
     # print("最优单层决策树:\n", bestStump, "\n最小权重误差:\n", minError, "\n最优样本预测类别:\n", array(bestClassEst))
 
     # 构造AdaBoost分类器及测试
-    dataMat, classLabels = loadSimpData()
-    weakClassArr = adaBoostTrainDS(dataMat, classLabels)
-    adaClassify([0,0], weakClassArr)
+    # dataMat, classLabels = loadSimpData()
+    # weakClassArr = adaBoostTrainDS(dataMat, classLabels)
+    # adaClassify([[5,5],[0,0]], weakClassArr)
 
     # 使用AdaBoost预测马的疝气病
     # dataArr, labelArr = loadDataSet('horseColicTraining2.txt')
@@ -158,3 +188,8 @@ if __name__ == '__main__':
     # errArr = mat(ones((67, 1)))
     # err = errArr[prediction10 != mat(testLabelArr).T].sum()
     # print(err)
+
+    # 绘制ROC曲线及计算AUC
+    dataArr, labelArr = loadDataSet('horseColicTraining2.txt')
+    classifierArray, aggClassEst = adaBoostTrainDS(dataArr, labelArr, 10)
+    plotROC(aggClassEst.T, labelArr)
