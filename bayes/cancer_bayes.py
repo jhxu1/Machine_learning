@@ -66,43 +66,35 @@ def algorithm(train_feature, train_label, test_feature):
         prob = sum(train_label == label) / train_label.shape[0]
         py[label] = prob
     
-    # P(X|Y)
+    # Calculate evert feature P(x|Y)
     px_y0 = {}
     px_y1 = {}
     label0_feature = train_feature[train_label == 0]
     label1_feature = train_feature[train_label == 1]
     for feature in range(slice):
-        px_y0[feature] = sum(label0_feature == feature) / len(label0_feature)
+        px_y0[feature] = sum(label0_feature == feature) / len(label0_feature)       #(2,)    
         px_y1[feature] = sum(label1_feature == feature) / len(label1_feature)
-
-    # # P(X|Y0)
-    # px_in_y0 = 0
-    # for feat_dim1 in range(slice):
-    #     for feat_dim2 in range(slice):
-    #         px_in_y0 += px_y0[feat_dim1][0] * px_y0[feat_dim2][1]
-    # px_in_y1 = 0
-    # for feat_dim1 in range(slice):
-    #     for feat_dim2 in range(slice):
-    #         px_in_y1 += px_y1[feat_dim1][0] * px_y1[feat_dim2][1]
 
     # pred
     # P(X|Y0)
-    px_in_y0 = np.zeros((test_feature.shape[0], 1))
-    for key, value in px_y0.items():
-        px_in_y0[test_feature[:, 0]]
-    px_y0[test_feature[:, 0]] * px_y1[test_feature[:, 1]]
-
-    test_prob_0 = px_y0[test_feature[:, 0]] * px_y1[test_feature[:, 1]] * py[0]
-
-
-    # pred_test_label = []
-    # for i in range(nums):
-    #     dis = ((test_feature[i, 0] - train_feature[:, 0]) ** 2 + (test_feature[i, 1] - train_feature[:, 1]) ** 2) ** 0.5
-    #     k_index = np.argsort(dis)[:k]
-    #     knn_label = train_label[k_index]
-    #     count_set = Counter(knn_label)
-    #     pred_test_label.append(count_set.most_common()[0][0])
-    # return np.array(pred_test_label)
+    px_in_y0 = np.ones((test_feature.shape[0]))
+    for key, prob in px_y0.items():
+        px_in_y0[test_feature[:, 0] == key] *= prob[0]
+        px_in_y0[test_feature[:, 1] == key] *= prob[1]
+    px_in_y1 = np.ones((test_feature.shape[0]))
+    for key, prob in px_y1.items():
+        px_in_y1[test_feature[:, 0] == key] *= prob[0]
+        px_in_y1[test_feature[:, 1] == key] *= prob[1]
+    px_in_y = [px_in_y0, px_in_y1]
+    # P(X)
+    px = px_in_y0 * py[0] + px_in_y1 * py[1]
+    
+    # prob
+    prob = np.zeros((test_feature.shape[0], len(label_list)))
+    for i in range(len(label_list)):
+        prob[:, i] = px_in_y[i] * py[i] / px
+    pred_test_label = np.argmax(prob, axis=1)
+    return pred_test_label
 
 def main():
     diabetes_X_train, diabetes_y_train, diabetes_X_test, diabetes_y_test = load_data()
@@ -112,7 +104,7 @@ def main():
 
     # vis
     save_path = os.path.join(os.path.dirname(__file__), os.path.basename(__file__).split(".")[0])
-    visualize(diabetes_X_train, diabetes_y_train, diabetes_X_test, diabetes_y_test, save_path)
+    visualize(diabetes_X_train, diabetes_y_train, diabetes_X_test, pred_test_label, save_path)
 
 if __name__ == "__main__":
     main()

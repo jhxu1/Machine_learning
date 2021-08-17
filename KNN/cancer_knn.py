@@ -59,7 +59,7 @@ def main():
 
     # vis
     save_path = os.path.join(os.path.dirname(__file__), os.path.basename(__file__).split(".")[0])
-    visualize(diabetes_X_train, diabetes_y_train, diabetes_X_test, diabetes_y_test, save_path)
+    visualize(diabetes_X_train, diabetes_y_train, diabetes_X_test, pred_test_label, save_path)
 
 if __name__ == "__main__":
     main()
